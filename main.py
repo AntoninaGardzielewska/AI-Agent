@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from google import genai
-from google.genai import types
+from google.genai import types, errors
 
 
 class AIAgent(object):
@@ -30,9 +30,15 @@ class AIAgent(object):
             types.Content(role="user", parts=[types.Part(text=self.user_prompt)])
         ]
         client = genai.Client(api_key=self._api_key)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=messages
-        )
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash", contents=messages
+            )
+        except errors.APIError as e:
+            print(f"Error code: {e.code}")        # HTTP status code (e.g., 404)
+            print(f"Error status: {e.status}")    # Status string (e.g., 'NOT_FOUND')
+            print(f"Error message: {e.message}")  # Human-readable error message
+            print(f"Error details: {e.details}")  # Full error response
         if response.usage_metadata is None:
             raise RuntimeError("Failed API request")
         if self.verbose:
